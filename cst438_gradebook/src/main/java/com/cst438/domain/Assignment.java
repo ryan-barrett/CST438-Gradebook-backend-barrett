@@ -61,6 +61,9 @@ public class Assignment {
 	public void setNeedsGrading(int needsGrading) {
 		this.needsGrading = needsGrading;
 	}
+	public void setAssignmentGrades(List<AssignmentGrade> gradesList) {
+		this.assignmentGrades = gradesList;
+	}
 	public ArrayList<AssignmentGrade> getAssignmentGrades() {
 		return new ArrayList<>(this.assignmentGrades);
 	}
