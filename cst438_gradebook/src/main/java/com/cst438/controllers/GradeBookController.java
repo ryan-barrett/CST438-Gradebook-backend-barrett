@@ -1,18 +1,13 @@
 package com.cst438.controllers;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.cst438.domain.Assignment;
@@ -165,5 +160,42 @@ public class GradeBookController {
 		
 		return assignment;
 	}
+
+    @PostMapping("/course/{course_id}/assignment")
+    @Transactional
+    public Boolean createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int course_id) throws ParseException {
+        System.out.println(course_id);
+        System.out.println("Create assignment for gradebook " + assignment.assignmentName + " " + assignment.dueDate);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Date date = formatter.parse(assignment.dueDate);
+        Course course = courseRepository.findByCourse_id(course_id);
+
+        Assignment newAssignment = new Assignment(course, assignment.assignmentName, date, 1);
+
+        assignmentRepository.save(newAssignment);
+        return true;
+    }
+
+    @PutMapping("/course/{course_id}/assignment/{id}")
+    @Transactional
+    public AssignmentListDTO.AssignmentDTO updateAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int id, @PathVariable String course_id) {
+        Assignment currentAssignment = assignmentRepository.findById(id);
+        currentAssignment.setName(assignment.assignmentName);
+        return new AssignmentListDTO.AssignmentDTO(currentAssignment.getId(), currentAssignment.getCourse().getCourse_id(), currentAssignment.getName(), currentAssignment.getDueDate().toString(), currentAssignment.getCourse().getTitle());
+    }
+
+    @DeleteMapping("/course/{course_id}/assignment/{id}")
+    @Transactional
+    public Boolean deleteAssignment(@PathVariable int id, @PathVariable String course_id) {
+        Assignment currentAssignment = assignmentRepository.findById(id);
+        if (currentAssignment.getAssignmentGrades().size() == 0) {
+            assignmentRepository.delete(currentAssignment);
+            return true;
+        }
+        return false;
+    }
 
 }
