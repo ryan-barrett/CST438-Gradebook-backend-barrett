@@ -1,5 +1,6 @@
 package com.cst438.controllers;
 
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -123,7 +124,7 @@ public class GradeBookController {
 
     @PostMapping("/course/{course_id}/finalgrades")
     @Transactional
-    public void calcFinalGrades(@PathVariable int course_id) {
+    public void calcFinalGrades(@PathVariable int course_id) throws URISyntaxException {
         System.out.println("Gradebook - calcFinalGrades for course " + course_id);
 
         // check that this request is from the course instructor
