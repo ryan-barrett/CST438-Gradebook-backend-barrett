@@ -48,7 +48,18 @@ public class RegistrationServiceMQ extends RegistrationService {
     @Transactional
     public void receive(EnrollmentDTO enrollmentDTO) {
         System.out.println("received MQ enrollment " + enrollmentDTO.id);
-        enrollmentController.addEnrollment(enrollmentDTO);
+        System.out.println("Receive enrollment :" + enrollmentDTO);
+        Course c = courseRepository.findByCourse_id(enrollmentDTO.course_id);
+        if (c != null) {
+            Enrollment e = new Enrollment();
+            e.setCourse(c);
+            e.setStudentEmail(enrollmentDTO.studentEmail);
+            e.setStudentName(enrollmentDTO.studentName);
+            enrollmentRepository.save(e);
+            System.out.println("Success");
+        } else {
+            System.out.println("Fail");
+        }
     }
 
     // sender of messages to Registration Service
