@@ -18,24 +18,26 @@ import com.cst438.domain.EnrollmentRepository;
 
 public class RegistrationServiceMQ extends RegistrationService {
 
-	@Autowired
-	EnrollmentRepository enrollmentRepository;
+    @Autowired
+    EnrollmentRepository enrollmentRepository;
 
-	@Autowired
-	CourseRepository courseRepository;
+    @Autowired
+    CourseRepository courseRepository;
 
-	@Autowired
-	private RabbitTemplate rabbitTemplate;
+    @Autowired
+    EnrollmentController enrollmentController;
 
-	public RegistrationServiceMQ() {
-		System.out.println("MQ registration service ");
-	}
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
-	// ----- configuration of message queues
+    public RegistrationServiceMQ() {
+        System.out.println("MQ registration service ");
+    }
 
-	@Autowired
-	Queue registrationQueue;
+    // ----- configuration of message queues
 
+    @Autowired
+    Queue registrationQueue;
 
 
     // ----- end of configuration of message queue
