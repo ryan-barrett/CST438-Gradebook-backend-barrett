@@ -1,5 +1,8 @@
 package com.cst438.domain;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import java.util.List;
 
 import javax.persistence.*;
@@ -14,11 +17,12 @@ public class Course {
 	private int year;
 	private String semester;
 	
-	@OneToMany(mappedBy="course", fetch=FetchType.EAGER)
+	@OneToMany(mappedBy="course")
 	@OrderBy("studentName ASC")
 	List<Enrollment> enrollments;
 	
 	@OneToMany(mappedBy="course")
+	@LazyCollection(LazyCollectionOption.FALSE)
 	List<Assignment> assignments;
 	
 	public int getCourse_id() {
