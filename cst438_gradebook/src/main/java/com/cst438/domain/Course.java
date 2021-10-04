@@ -2,10 +2,7 @@ package com.cst438.domain;
 
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
+import javax.persistence.*;
 
 @Entity
 public class Course {
@@ -17,7 +14,7 @@ public class Course {
 	private int year;
 	private String semester;
 	
-	@OneToMany(mappedBy="course")
+	@OneToMany(mappedBy="course", fetch=FetchType.EAGER)
 	@OrderBy("studentName ASC")
 	List<Enrollment> enrollments;
 	
