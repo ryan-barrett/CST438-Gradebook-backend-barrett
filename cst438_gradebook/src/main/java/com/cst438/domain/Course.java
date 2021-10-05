@@ -1,11 +1,11 @@
 package com.cst438.domain;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
+import javax.persistence.*;
 
 @Entity
 public class Course {
@@ -22,6 +22,7 @@ public class Course {
 	List<Enrollment> enrollments;
 	
 	@OneToMany(mappedBy="course")
+	@LazyCollection(LazyCollectionOption.FALSE)
 	List<Assignment> assignments;
 	
 	public int getCourse_id() {
