@@ -7,6 +7,8 @@ import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,9 +43,9 @@ public class GradeBookController {
 
     // get assignments for an instructor that need grading
     @GetMapping("/gradebook")
-    public AssignmentListDTO getAssignmentsNeedGrading() {
+    public AssignmentListDTO getAssignmentsNeedGrading(@AuthenticationPrincipal OAuth2User principal) {
 
-        String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+        String email = principal.getAttribute("email");
 
         List<Assignment> assignments = assignmentRepository.findNeedGradingByEmail(email);
         AssignmentListDTO result = new AssignmentListDTO();
@@ -54,9 +56,9 @@ public class GradeBookController {
     }
 
     @GetMapping("/gradebook/{id}")
-    public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId) {
+    public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal) {
 
-        String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+        String email = principal.getAttribute("email");
         Assignment assignment = checkAssignment(assignmentId, email);
 
         // get the enrollment for the course
@@ -87,19 +89,30 @@ public class GradeBookController {
 
     @PostMapping("/course/{course_id}/assignment")
     @Transactional
-    public Boolean createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment, @PathVariable int course_id) throws ParseException {
+    public Boolean createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO assignment,
+                                    @PathVariable int course_id,
+                                    @AuthenticationPrincipal OAuth2User principal) throws ParseException {
         System.out.println(course_id);
         System.out.println("Create assignment for gradebook " + assignment.assignmentName + " " + assignment.dueDate);
+
+        String email = principal.getAttribute("email");
+        if (!isCourseInstructor(course_id, email)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not Authorized. ");
+        }
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH);
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         Date date = formatter.parse(assignment.dueDate);
         Course course = courseRepository.findByCourse_id(course_id);
+        List<Assignment> currentAssignments = course.getAssignments();
 
         Assignment newAssignment = new Assignment(course, assignment.assignmentName, date, 1);
+        currentAssignments.add(newAssignment);
+        course.setAssignments(currentAssignments);
 
         assignmentRepository.save(newAssignment);
+        courseRepository.save(course);
         return true;
     }
 
@@ -167,9 +180,11 @@ public class GradeBookController {
 
     @PutMapping("/gradebook/{id}")
     @Transactional
-    public void updateGradebook(@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId) {
+    public void updateGradebook(@RequestBody GradebookDTO gradebook,
+                                @PathVariable("id") Integer assignmentId,
+                                @AuthenticationPrincipal OAuth2User principal) {
 
-        String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+        String email = principal.getAttribute("email");
         checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
 
         // for each grade in gradebook, update the assignment grade in database
@@ -192,11 +207,19 @@ public class GradeBookController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignment not found. " + assignmentId);
         }
         // check that user is the course instructor
-        if (!assignment.getCourse().getInstructor().equals(email)) {
+        if (!isCourseInstructor(assignment.getCourse(), email)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not Authorized. ");
         }
 
         return assignment;
     }
 
+    private Boolean isCourseInstructor(Integer courseId, String email) {
+        Course course = courseRepository.findByCourse_id(courseId);
+        return course.getInstructor().equals(email);
+    }
+
+    private Boolean isCourseInstructor(Course course, String email) {
+        return course.getInstructor().equals(email);
+    }
 }
