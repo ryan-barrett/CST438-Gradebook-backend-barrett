@@ -43,9 +43,9 @@ public class GradeBookController {
 
     // get assignments for an instructor that need grading
     @GetMapping("/gradebook")
-    public AssignmentListDTO getAssignmentsNeedGrading() {
+    public AssignmentListDTO getAssignmentsNeedGrading(@AuthenticationPrincipal OAuth2User principal) {
 
-        String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+        String email = principal.getAttribute("email");
 
         List<Assignment> assignments = assignmentRepository.findNeedGradingByEmail(email);
         AssignmentListDTO result = new AssignmentListDTO();
@@ -56,9 +56,9 @@ public class GradeBookController {
     }
 
     @GetMapping("/gradebook/{id}")
-    public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId) {
+    public GradebookDTO getGradebook(@PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal) {
 
-        String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+        String email = principal.getAttribute("email");
         Assignment assignment = checkAssignment(assignmentId, email);
 
         // get the enrollment for the course
